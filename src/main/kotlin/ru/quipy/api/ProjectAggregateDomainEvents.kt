@@ -94,3 +94,45 @@ class TagAssignedToTaskEvent(
     name = TAG_ASSIGNED_TO_TASK_EVENT,
     createdAt = createdAt
 )
+
+@DomainEvent(name = STATUS_CREATED_EVENT)
+class StatusCreatedEvent(
+    val stateName: String,
+    val statusId: UUID,
+    val color: String,
+    createdAt: Long = System.currentTimeMillis(),
+) : Event<ProjectAggregate>(
+    name = STATUS_CREATED_EVENT,
+    createdAt = createdAt
+)
+
+@DomainEvent(name = STATUS_REMOVED_EVENT)
+class StatusRemovedEvent(
+    val statusId: UUID,
+    createdAt: Long = System.currentTimeMillis(),
+) : Event<ProjectAggregate>(
+    name = STATUS_REMOVED_EVENT,
+    createdAt = createdAt
+)
+
+@DomainEvent(name = TASK_CHANGED_NAME_EVENT)
+class TaskChangedNameEvent(
+    val taskId: UUID,
+    val newName: String,
+    val issuerUsername: String,
+    createdAt: Long = System.currentTimeMillis(),
+) : Event<ProjectAggregate>(
+    name = TASK_CHANGED_NAME_EVENT,
+    createdAt = createdAt
+)
+
+@DomainEvent(name = TASK_CHANGED_STATUS_EVENT)
+class TaskChangedStatusEvent(
+    val taskId: UUID,
+    val statusId: UUID,
+    val issuerUsername: String,
+    createdAt: Long = System.currentTimeMillis(),
+) : Event<ProjectAggregate>(
+    name = TASK_CHANGED_STATUS_EVENT,
+    createdAt = createdAt
+)

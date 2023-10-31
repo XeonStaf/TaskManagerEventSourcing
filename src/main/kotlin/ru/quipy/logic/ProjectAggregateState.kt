@@ -115,6 +115,12 @@ data class TagEntity(
     val name: String
 )
 
+data class StatusEntity(
+    val id: UUID = UUID.randomUUID(),
+    val name: String,
+    val color: String
+)
+
 /**
  * Demonstrates that the transition functions might be representer by "extension" functions, not only class members functions
  */
