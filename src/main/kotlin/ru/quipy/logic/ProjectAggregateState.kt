@@ -15,6 +15,8 @@ class ProjectAggregateState : AggregateState<UUID, ProjectAggregate> {
     lateinit var creatorId: String
     var tasks = mutableMapOf<UUID, TaskEntity>()
     var projectTags = mutableMapOf<UUID, TagEntity>()
+    var projectStatuses = mutableMapOf<UUID, StatusEntity>()
+    var membersUsername = mutableSetOf<String>()
 
     override fun getId() = projectId
 
@@ -27,6 +29,7 @@ class ProjectAggregateState : AggregateState<UUID, ProjectAggregate> {
         updatedAt = createdAt
     }
 
+
     @StateTransitionFunc
     fun tagCreatedApply(event: TagCreatedEvent) {
         projectTags[event.tagId] = TagEntity(event.tagId, event.tagName)
@@ -35,15 +38,76 @@ class ProjectAggregateState : AggregateState<UUID, ProjectAggregate> {
 
     @StateTransitionFunc
     fun taskCreatedApply(event: TaskCreatedEvent) {
-        tasks[event.taskId] = TaskEntity(event.taskId, event.taskName, mutableSetOf())
+        tasks[event.taskId] = TaskEntity(event.taskId,
+                    event.taskName, mutableSetOf(), null, null)
         updatedAt = createdAt
     }
+
+    @StateTransitionFunc
+    fun changedTitleApply(event: ProjectChangedTitleEvent) {
+        if (membersUsername.contains(event.issuerUsername)) {
+            projectTitle = event.newTitle;
+            updatedAt = createdAt
+        }
+    }
+
+    @StateTransitionFunc
+    fun userInvitedInProjectApply(event: ProjectInvitedEvent) {
+        if (membersUsername.contains(event.issuerUsername)) {
+            membersUsername.add(event.newUsername)
+            updatedAt = createdAt
+        }
+    }
+
+    @StateTransitionFunc
+    fun assignedUserToTaskApply(event: TaskAssignedToUserEvent) {
+        if (membersUsername.contains(event.issuerUsername) && tasks.containsKey(event.taskId)) {
+            tasks[event.taskId]?.userAssigned = event.assignedUsername
+            updatedAt = createdAt
+        }
+    }
+
+    @StateTransitionFunc
+    fun statusCreatedApply(event: StatusCreatedEvent) {
+        val newState = StatusEntity(event.statusId, event.stateName, event.color)
+        projectStatuses[newState.id] = newState
+        updatedAt = createdAt
+    }
+
+    @StateTransitionFunc
+    fun taskChangedNameApply(event: TaskChangedNameEvent) {
+        if (membersUsername.contains(event.issuerUsername)) {
+            if (tasks.containsKey(event.taskId)) {
+                tasks[event.taskId]?.name = event.newName
+                updatedAt = createdAt
+            }
+        }
+    }
+
+    @StateTransitionFunc
+    fun statusRemovedApply(event: StatusRemovedEvent) {
+        projectStatuses.remove(event.statusId)
+        updatedAt = createdAt
+    }
+
+    @StateTransitionFunc
+    fun taskStatusChangedApply(event: TaskChangedStatusEvent) {
+        if (membersUsername.contains(event.issuerUsername)) {
+            if (tasks.containsKey(event.taskId) && projectStatuses.containsKey(event.statusId)) {
+                tasks[event.taskId]?.statusId = event.statusId
+                updatedAt = createdAt
+            }
+        }
+    }
+
 }
 
 data class TaskEntity(
     val id: UUID = UUID.randomUUID(),
-    val name: String,
-    val tagsAssigned: MutableSet<UUID>
+    var name: String,
+    val tagsAssigned: MutableSet<UUID>,
+    var userAssigned: String?,
+    var statusId: UUID?
 )
 
 data class TagEntity(
