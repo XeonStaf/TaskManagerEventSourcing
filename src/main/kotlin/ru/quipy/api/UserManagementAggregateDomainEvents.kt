@@ -12,7 +12,7 @@ class UserRegisteredEvent(
     val fullname: String,
     val password: String,
     createdAt: Long = System.currentTimeMillis(),
-) : Event<ProjectAggregate>(
+) : Event<UserManagementAggregate>(
     name = USER_REGISTERED_EVENT,
     createdAt = createdAt,
 )
@@ -22,7 +22,7 @@ class UserChangedNameEvent(
     val username: String,
     val newFullname: String,
     createdAt: Long = System.currentTimeMillis(),
-) : Event<ProjectAggregate>(
+) : Event<UserManagementAggregate>(
     name = USER_CHANGED_NAME_EVENT,
     createdAt = createdAt,
 )

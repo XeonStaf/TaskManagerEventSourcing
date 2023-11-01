@@ -1,9 +1,6 @@
 package ru.quipy.logic
 
-import ru.quipy.api.ProjectCreatedEvent
-import ru.quipy.api.TagAssignedToTaskEvent
-import ru.quipy.api.TagCreatedEvent
-import ru.quipy.api.TaskCreatedEvent
+import ru.quipy.api.*
 import java.util.*
 
 
@@ -40,3 +37,86 @@ fun ProjectAggregateState.assignTagToTask(tagId: UUID, taskId: UUID): TagAssigne
 
     return TagAssignedToTaskEvent(projectId = this.getId(), tagId = tagId, taskId = taskId)
 }
+
+fun ProjectAggregateState.inviteUser(issuerUsername: String, newUsername: String): ProjectInvitedEvent {
+    if (!this.membersUsername.contains(issuerUsername)) {
+        throw IllegalArgumentException("User with username $issuerUsername is not member of this project")
+    }
+
+    if (this.membersUsername.contains(newUsername)) {
+        throw IllegalArgumentException("User with username $issuerUsername is already member of this project")
+    }
+
+    return ProjectInvitedEvent(projectId = this.getId(), issuerUsername = issuerUsername, newUsername = newUsername)
+}
+
+fun ProjectAggregateState.changeTitle(newTitle: String, issuerUsername: String): ProjectChangedTitleEvent {
+    if (!this.membersUsername.contains(issuerUsername)) {
+        throw IllegalArgumentException("User with username $issuerUsername is not member of this project")
+    }
+
+    return ProjectChangedTitleEvent(newTitle, issuerUsername)
+}
+
+fun ProjectAggregateState.assignTaskToUser(issuerUsername: String, taskId: UUID, assignedUsername: String)
+    : TaskAssignedToUserEvent{
+    if (!this.membersUsername.contains(issuerUsername)) {
+        throw IllegalArgumentException("User with username $issuerUsername is not member of this project")
+    }
+
+    if (!this.tasks.containsKey(taskId)) {
+        throw IllegalArgumentException("Task with id $taskId is not exist in this project")
+    }
+
+    if (!this.membersUsername.contains(assignedUsername)) {
+        throw IllegalArgumentException("User with username $assignedUsername is not member of this project")
+    }
+
+    return TaskAssignedToUserEvent(issuerUsername, taskId, assignedUsername)
+}
+
+fun ProjectAggregateState.createStatus(stateName: String, statusId: UUID, color: String): StatusCreatedEvent{
+    if (this.projectStatuses.containsKey(statusId)) {
+        throw IllegalArgumentException("Status with id $statusId is already exists in this project")
+    }
+
+    return StatusCreatedEvent(stateName, statusId, color)
+}
+
+fun ProjectAggregateState.removeStatus(statusId: UUID): StatusRemovedEvent {
+    if (!this.projectStatuses.containsKey(statusId)) {
+        throw IllegalArgumentException("Status with id $statusId is not exists in this project")
+    }
+
+    return StatusRemovedEvent(statusId)
+}
+
+fun ProjectAggregateState.changeTaskName(taskId: UUID, newName: String, issuerUsername: String,): TaskChangedNameEvent {
+    if (!this.tasks.containsKey(taskId)) {
+        throw IllegalArgumentException("Task with id $taskId is not exist in this project")
+    }
+
+    if (!this.membersUsername.contains(issuerUsername)) {
+        throw IllegalArgumentException("User with username $issuerUsername is not member of this project")
+    }
+
+    return TaskChangedNameEvent(taskId, newName, issuerUsername)
+}
+
+fun ProjectAggregateState.changeTaskStatus(taskId: UUID, statusId: UUID, issuerUsername: String,): TaskChangedStatusEvent {
+    if (!this.tasks.containsKey(taskId)) {
+        throw IllegalArgumentException("Task with id $taskId is not exist in this project")
+    }
+
+    if (!this.membersUsername.contains(issuerUsername)) {
+        throw IllegalArgumentException("User with username $issuerUsername is not member of this project")
+    }
+
+    if (!this.projectStatuses.containsKey(statusId)) {
+        throw IllegalArgumentException("Status with id $statusId is not exists in this project")
+    }
+
+
+    return TaskChangedStatusEvent(taskId, statusId, issuerUsername)
+}
+
