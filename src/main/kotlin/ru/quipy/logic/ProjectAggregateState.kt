@@ -17,8 +17,11 @@ class ProjectAggregateState : AggregateState<UUID, ProjectAggregate> {
     var projectTags = mutableMapOf<UUID, TagEntity>()
     var projectStatuses = mutableMapOf<UUID, StatusEntity>()
     var membersUsername = mutableSetOf<String>()
+    lateinit var defaultStatus: StatusEntity
 
     override fun getId() = projectId
+
+    fun getTitle() = projectTitle
 
     // State transition functions which is represented by the class member function
     @StateTransitionFunc
@@ -27,6 +30,7 @@ class ProjectAggregateState : AggregateState<UUID, ProjectAggregate> {
         projectTitle = event.title
         creatorId = event.creatorId
         updatedAt = createdAt
+        defaultStatus = StatusEntity(id = UUID.randomUUID(), name = "OPEN", color = "#FFFFFF")
     }
 
 
@@ -39,7 +43,7 @@ class ProjectAggregateState : AggregateState<UUID, ProjectAggregate> {
     @StateTransitionFunc
     fun taskCreatedApply(event: TaskCreatedEvent) {
         tasks[event.taskId] = TaskEntity(event.taskId,
-                    event.taskName, mutableSetOf(), null, null)
+                    event.taskName, mutableSetOf(), null, defaultStatus.id)
         updatedAt = createdAt
     }
 
@@ -107,7 +111,7 @@ data class TaskEntity(
     var name: String,
     val tagsAssigned: MutableSet<UUID>,
     var userAssigned: String?,
-    var statusId: UUID?
+    var statusId: UUID
 )
 
 data class TagEntity(

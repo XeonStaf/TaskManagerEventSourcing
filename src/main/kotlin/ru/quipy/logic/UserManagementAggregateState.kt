@@ -18,6 +18,8 @@ class UserManagementAggregateState : AggregateState<String, UserManagementAggreg
 
     override fun getId(): String = username
 
+    fun getFullName(): String = fullname
+
     @StateTransitionFunc
     fun userRegisteredApply(event: UserRegisteredEvent) {
         username = event.username

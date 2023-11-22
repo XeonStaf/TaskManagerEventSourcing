@@ -8,5 +8,9 @@ fun UserManagementAggregateState.registerUser(username: String, fullname: String
 }
 
 fun UserManagementAggregateState.changeUserName(newFullName: String): UserChangedNameEvent {
+    if (this.getFullName() == newFullName) {
+        throw IllegalArgumentException("User with name: $newFullName already exists")
+    }
+
     return UserChangedNameEvent(this.getId(), newFullName)
 }

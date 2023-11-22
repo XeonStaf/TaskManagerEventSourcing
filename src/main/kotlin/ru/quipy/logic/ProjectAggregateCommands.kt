@@ -35,6 +35,10 @@ fun ProjectAggregateState.assignTagToTask(tagId: UUID, taskId: UUID): TagAssigne
         throw IllegalArgumentException("Task doesn't exists: $taskId")
     }
 
+    if (this.tasks[taskId]?.tagsAssigned?.contains(tagId) == true) {
+        throw IllegalArgumentException("This tag is already assigned to this task")
+    }
+
     return TagAssignedToTaskEvent(projectId = this.getId(), tagId = tagId, taskId = taskId)
 }
 
@@ -54,6 +58,9 @@ fun ProjectAggregateState.changeTitle(newTitle: String, issuerUsername: String):
     if (!this.membersUsername.contains(issuerUsername)) {
         throw IllegalArgumentException("User with username $issuerUsername is not member of this project")
     }
+    if (this.getTitle() == newTitle) {
+        throw IllegalArgumentException("This project is already named as: $newTitle")
+    }
 
     return ProjectChangedTitleEvent(newTitle, issuerUsername)
 }
@@ -65,11 +72,15 @@ fun ProjectAggregateState.assignTaskToUser(issuerUsername: String, taskId: UUID,
     }
 
     if (!this.tasks.containsKey(taskId)) {
-        throw IllegalArgumentException("Task with id $taskId is not exist in this project")
+        throw IllegalArgumentException("Task with id $taskId doesn't exist in this project")
     }
 
     if (!this.membersUsername.contains(assignedUsername)) {
         throw IllegalArgumentException("User with username $assignedUsername is not member of this project")
+    }
+
+    if (this.tasks[taskId]?.userAssigned.equals(assignedUsername)) {
+        throw IllegalArgumentException("This user: $assignedUsername is already assigned to this task")
     }
 
     return TaskAssignedToUserEvent(issuerUsername, taskId, assignedUsername)
@@ -77,7 +88,7 @@ fun ProjectAggregateState.assignTaskToUser(issuerUsername: String, taskId: UUID,
 
 fun ProjectAggregateState.createStatus(stateName: String, statusId: UUID, color: String): StatusCreatedEvent{
     if (this.projectStatuses.containsKey(statusId)) {
-        throw IllegalArgumentException("Status with id $statusId is already exists in this project")
+        throw IllegalArgumentException("Status with id $statusId already exists in this project")
     }
 
     return StatusCreatedEvent(stateName, statusId, color)
@@ -85,7 +96,7 @@ fun ProjectAggregateState.createStatus(stateName: String, statusId: UUID, color:
 
 fun ProjectAggregateState.removeStatus(statusId: UUID): StatusRemovedEvent {
     if (!this.projectStatuses.containsKey(statusId)) {
-        throw IllegalArgumentException("Status with id $statusId is not exists in this project")
+        throw IllegalArgumentException("Status with id $statusId doesn't exist in this project")
     }
 
     return StatusRemovedEvent(statusId)
@@ -99,7 +110,11 @@ fun ProjectAggregateState.changeTaskName(taskId: UUID, newName: String, issuerUs
     if (!this.membersUsername.contains(issuerUsername)) {
         throw IllegalArgumentException("User with username $issuerUsername is not member of this project")
     }
+    val currentTaskName : String? = this.tasks[taskId]?.name
 
+    if (currentTaskName.equals(newName)) {
+        throw IllegalArgumentException("Task with name $currentTaskName already exists")
+    }
     return TaskChangedNameEvent(taskId, newName, issuerUsername)
 }
 
@@ -116,6 +131,11 @@ fun ProjectAggregateState.changeTaskStatus(taskId: UUID, statusId: UUID, issuerU
         throw IllegalArgumentException("Status with id $statusId is not exists in this project")
     }
 
+    val currentTaskStatusId: UUID = this.tasks[taskId]!!.statusId
+
+    if (currentTaskStatusId.equals(statusId)) {
+        throw IllegalArgumentException("Status with id $statusId is already existed")
+    }
 
     return TaskChangedStatusEvent(taskId, statusId, issuerUsername)
 }
